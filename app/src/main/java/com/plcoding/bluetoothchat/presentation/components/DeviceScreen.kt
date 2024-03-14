@@ -18,7 +18,9 @@ import com.plcoding.bluetoothchat.presentation.BluetoothUiState
 fun DeviceScreen(
     state: BluetoothUiState,
     onStartScan: () -> Unit,
-    onStopScan: () -> Unit
+    onStopScan: () -> Unit,
+    onStartServer: () -> Unit,//启动服务器
+    onDeviceClick: (BluetoothDevice) -> Unit//当设备被点击的时候
 ) {
     Column(
         modifier = Modifier
@@ -27,7 +29,7 @@ fun DeviceScreen(
         BluetoothDeviceList(
             pairedDevices = state.pairedDevices,
             scannedDevices = state.scannedDevices,
-            onClick = {},
+            onClick = onDeviceClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -37,10 +39,13 @@ fun DeviceScreen(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Button(onClick = onStartScan) {
-                Text(text = "Start scan")
+                Text(text = "开始扫描")
             }
             Button(onClick = onStopScan) {
-                Text(text = "Stop scan")
+                Text(text = "停止扫描")
+            }
+            Button(onClick = onStartServer) {
+                Text(text = "开启服务端")
             }
         }
     }
@@ -58,7 +63,7 @@ fun BluetoothDeviceList(
     ) {
         item {
             Text(
-                text = "Paired Devices",
+                text = "已配对的设备",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(16.dp)
@@ -66,7 +71,7 @@ fun BluetoothDeviceList(
         }
         items(pairedDevices) { device ->
             Text(
-                text = device.name ?: "(No name)",
+                text = device.name ?: device.address?:"no",
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClick(device) }
@@ -76,7 +81,7 @@ fun BluetoothDeviceList(
 
         item {
             Text(
-                text = "Scanned Devices",
+                text = "未配对的设备",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(16.dp)
@@ -84,7 +89,7 @@ fun BluetoothDeviceList(
         }
         items(scannedDevices) { device ->
             Text(
-                text = device.name ?: "(No name)",
+                text = device.name ?: device.address?:"no",
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClick(device) }
