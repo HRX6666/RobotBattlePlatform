@@ -196,6 +196,9 @@ class AndroidBluetoothController(
         }.flowOn(Dispatchers.IO)
     }
 
+    /**
+     * 尝试发送消息
+     */
     override suspend fun trySendMessage(message: String): BluetoothMessage? {
         if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             return null
@@ -204,16 +207,18 @@ class AndroidBluetoothController(
         if(dataTransferService == null) {
             return null
         }
-
+        /**
+         * 创建蓝牙信息
+         */
         val bluetoothMessage = BluetoothMessage(
             message = message,
-            senderName = bluetoothAdapter?.name ?: "Unknown name",
+            senderName = bluetoothAdapter?.name ?: "未知名称",
             isFromLocalUser = true
         )
 
         dataTransferService?.sendMessage(bluetoothMessage.toByteArray())
 
-        return bluetoothMessage
+        return bluetoothMessage//返回蓝牙信息
     }
 
     override fun closeConnection() {

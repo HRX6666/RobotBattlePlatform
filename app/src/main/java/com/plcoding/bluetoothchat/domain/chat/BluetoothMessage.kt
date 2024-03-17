@@ -1,7 +1,7 @@
 package com.plcoding.bluetoothchat.domain.chat
 
 data class BluetoothMessage(
-    val message: String,
-    val senderName: String,
-    val isFromLocalUser: Boolean
+    val message: String, //实际想发送的文本
+    val senderName: String,//发件人名称
+    val isFromLocalUser: Boolean //是否发送信息
 )

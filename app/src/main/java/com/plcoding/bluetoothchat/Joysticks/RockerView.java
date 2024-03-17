@@ -1,4 +1,4 @@
-package com.plcoding.bluetoothchat.Wight;
+package com.plcoding.bluetoothchat.Joysticks;
 
 
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import com.plcoding.bluetoothchat.util.DensityUtil;
@@ -203,9 +204,16 @@ public class RockerView extends View {
 
     /** 获取飞行偏移量 */
     private void getFlyOffset() {
+
         float x = (smallCenterX - bigCenterX) * 1.0f / viewWidth * VELOCITY;
         float y = (smallCenterY - bigCenterY) * 1.0f / viewHeight * VELOCITY;
-        onRockerListener.getDate(this, x, y);
+        if (onRockerListener != null) {
+            onRockerListener.getDate(this, x, y);
+        } else {
+            // 处理 onRockerListener 为空的情况
+            Toast.makeText(this.getContext(),"空空空",Toast.LENGTH_LONG).show();
+        }
+
     }
 
     /**
@@ -213,6 +221,7 @@ public class RockerView extends View {
      */
     public interface OnRockerListener {
         public void getDate(RockerView rocker, final float pX, final float pY);
+
     }
     private OnRockerListener onRockerListener;
     public void getDate(final OnRockerListener onRockerListener) {

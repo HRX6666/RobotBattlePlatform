@@ -13,11 +13,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BluetoothViewModel @Inject constructor(
-    private val bluetoothController: BluetoothController //蓝牙控制器
+    private val bluetoothController: BluetoothController
 ): ViewModel() {
 
     private val _state = MutableStateFlow(BluetoothUiState())
-    val state = combine(//组合多个状态流
+    val state = combine(
         bluetoothController.scannedDevices,
         bluetoothController.pairedDevices,
         _state
@@ -27,14 +27,11 @@ class BluetoothViewModel @Inject constructor(
             pairedDevices = pairedDevices,
             messages = if(state.isConnected) state.messages else emptyList()
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)//启动状态流
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
     private var deviceConnectionJob: Job? = null
 
     init {
-        /**
-         * 对于每次配对发出连接
-         */
         bluetoothController.isConnected.onEach { isConnected ->
             _state.update { it.copy(isConnected = isConnected) }
         }.launchIn(viewModelScope)
@@ -47,7 +44,7 @@ class BluetoothViewModel @Inject constructor(
     }
 
     fun connectToDevice(device: BluetoothDeviceDomain) {
-        _state.update { it.copy(isConnecting = true) }//如果连接成功则启动监听
+        _state.update { it.copy(isConnecting = true) }
         deviceConnectionJob = bluetoothController
             .connectToDevice(device)
             .listen()
@@ -88,11 +85,7 @@ class BluetoothViewModel @Inject constructor(
         bluetoothController.stopDiscovery()
     }
 
-    /**
-     * 扩展类型连接结果的Flow
-     */
     private fun Flow<ConnectionResult>.listen(): Job {
-        //如果取消连接，则信息都将储存在ConnectionResult中
         return onEach { result ->
             when(result) {
                 ConnectionResult.ConnectionEstablished -> {
@@ -126,9 +119,6 @@ class BluetoothViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /**
-     * 调用bluetoothController中的release()释放所有的资源文件
-     */
     override fun onCleared() {
         super.onCleared()
         bluetoothController.release()

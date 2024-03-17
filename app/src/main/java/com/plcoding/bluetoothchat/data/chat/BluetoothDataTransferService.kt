@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
+/**
+ * 对于消息收发的函数功能
+ */
 class BluetoothDataTransferService(
     private val socket: BluetoothSocket
 ) {
@@ -19,15 +22,17 @@ class BluetoothDataTransferService(
             if(!socket.isConnected) {
                 return@flow
             }
-            val buffer = ByteArray(1024)
+            val buffer = ByteArray(1024)//字节缓冲区
             while(true) {
                 val byteCount = try {
-                    socket.inputStream.read(buffer)
+                    socket.inputStream.read(buffer)//将字节读入数组
                 } catch(e: IOException) {
                     throw TransferFailedException()
                 }
-
-                emit(
+                /**
+                 * 监听传入消息的功能
+                 */
+                emit(//释放一些
                     buffer.decodeToString(
                         endIndex = byteCount
                     ).toBluetoothMessage(
@@ -37,6 +42,10 @@ class BluetoothDataTransferService(
             }
         }.flowOn(Dispatchers.IO)
     }
+
+    /**
+     * 挂起函数发送消息
+     */
 
     suspend fun sendMessage(bytes: ByteArray): Boolean {
         return withContext(Dispatchers.IO) {

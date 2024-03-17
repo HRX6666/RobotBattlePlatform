@@ -1,7 +1,7 @@
 package com.plcoding.bluetoothchat.activitys
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.plcoding.bluetoothchat.R
 
 class EnterActivity : AppCompatActivity() {
