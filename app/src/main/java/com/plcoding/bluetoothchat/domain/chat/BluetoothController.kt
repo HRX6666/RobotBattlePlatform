@@ -16,7 +16,7 @@ interface BluetoothController {
     fun startBluetoothServer(): Flow<ConnectionResult>//打开服务器？？
     fun connectToDevice(device: BluetoothDevice): Flow<ConnectionResult>//连接到设备
 
-    suspend fun trySendMessage(message: String): BluetoothMessage?//尝试发送消息
+    suspend fun trySendMessage(head:String,message: String): BluetoothMessage?//尝试发送消息
 
     fun closeConnection()//关闭连接
     fun release()//释放资源

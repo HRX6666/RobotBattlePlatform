@@ -143,14 +143,16 @@ class AndroidBluetoothController(
                 emit(ConnectionResult.ConnectionEstablished)
                 currentClientSocket?.let {
                     currentServerSocket?.close()
-                    val service = BluetoothDataTransferService(it)
+                    val service = BluetoothDataTransferService(it)//设置一个发送数据男的服务
                     dataTransferService = service
-
+                    /**
+                     * 只说发出所有监听传入消息的服务
+                     */
                     emitAll(
                         service
                             .listenForIncomingMessages()
                             .map {
-                                ConnectionResult.TransferSucceeded(it)
+                                ConnectionResult.TransferSucceeded(it)//获得一个蓝牙消息
                             }
                     )
                 }
@@ -177,12 +179,14 @@ class AndroidBluetoothController(
                 try {
                     socket.connect()
                     emit(ConnectionResult.ConnectionEstablished)//阻塞线程直到建立连接
-
+                    /**
+                     * 蓝牙数据传输服务
+                     */
                     BluetoothDataTransferService(socket).also {
                         dataTransferService = it
                         emitAll(
                             it.listenForIncomingMessages()
-                                .map { ConnectionResult.TransferSucceeded(it) }
+                                .map { ConnectionResult.TransferSucceeded(it) }//将其映射到传输成功的对象并传递蓝牙消息
                         )
                     }
                 } catch(e: IOException) {
@@ -199,7 +203,7 @@ class AndroidBluetoothController(
     /**
      * 尝试发送消息
      */
-    override suspend fun trySendMessage(message: String): BluetoothMessage? {
+    override suspend fun trySendMessage(head:String,message: String): BluetoothMessage? {
         if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
             return null
         }
@@ -212,8 +216,10 @@ class AndroidBluetoothController(
          */
         val bluetoothMessage = BluetoothMessage(
             message = message,
-            senderName = bluetoothAdapter?.name ?: "未知名称",
-            isFromLocalUser = true
+           // senderName = bluetoothAdapter?.name ?: "未知名称",
+            senderName = head,
+            isFromLocalUser = true,
+            end = message
         )
 
         dataTransferService?.sendMessage(bluetoothMessage.toByteArray())

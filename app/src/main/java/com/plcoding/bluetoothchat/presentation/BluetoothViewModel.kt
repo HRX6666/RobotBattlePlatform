@@ -1,7 +1,9 @@
 package com.plcoding.bluetoothchat.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.plcoding.bluetoothchat.domain.chat.BluetoothController
 import com.plcoding.bluetoothchat.domain.chat.BluetoothDeviceDomain
 import com.plcoding.bluetoothchat.domain.chat.ConnectionResult
@@ -66,15 +68,21 @@ class BluetoothViewModel @Inject constructor(
             .listen()
     }
 
-    fun sendMessage(message: String) {
+    /**
+     * 发送消息
+     */
+    fun sendMessage(head:String,message: String) {
         viewModelScope.launch {
-            val bluetoothMessage = bluetoothController.trySendMessage(message)
+            val bluetoothMessage = bluetoothController.trySendMessage(head,message)
             if(bluetoothMessage != null) {
                 _state.update { it.copy(
                     messages = it.messages + bluetoothMessage
                 ) }
             }
         }
+    }
+    fun receiveMessage(remessage:String){
+
     }
 
     fun startScan() {
@@ -84,6 +92,7 @@ class BluetoothViewModel @Inject constructor(
     fun stopScan() {
         bluetoothController.stopDiscovery()
     }
+
 
     private fun Flow<ConnectionResult>.listen(): Job {
         return onEach { result ->
@@ -98,6 +107,7 @@ class BluetoothViewModel @Inject constructor(
                 is ConnectionResult.TransferSucceeded -> {
                     _state.update { it.copy(
                         messages = it.messages + result.message
+
                     ) }
                 }
                 is ConnectionResult.Error -> {

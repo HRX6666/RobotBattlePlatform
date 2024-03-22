@@ -1,5 +1,4 @@
 package com.plcoding.bluetoothchat.presentation
-
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -26,8 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.plcoding.bluetoothchat.activitys.PlayMainActivity
 import com.plcoding.bluetoothchat.presentation.components.ChatScreen
 import com.plcoding.bluetoothchat.presentation.components.DeviceScreen
+import com.plcoding.bluetoothchat.presentation.components.Playgame
 import com.plcoding.bluetoothchat.ui.theme.BluetoothChatTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -113,12 +114,19 @@ class MainActivity : ComponentActivity() {
                                 Text(text = "正在连接，请稍后......")
                             }
                         }
+                        /**
+                         * 如果成功连接了
+                         */
                         state.isConnected -> {
-                            ChatScreen(
+
+                            Playgame(
                                 state = state,
                                 onDisconnect = viewModel::disconnectFromDevice,
                                 onSendMessage = viewModel::sendMessage
                             )
+//                            val intent=Intent(this, PlayMainActivity::class.java)
+//                            startActivity(intent)
+
                         }
                         else -> {
                             DeviceScreen(

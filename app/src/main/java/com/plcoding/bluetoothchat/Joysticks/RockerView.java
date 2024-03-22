@@ -159,6 +159,7 @@ public class RockerView extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
+                //返回摇杆移动数据的方法
                 touchX = (int) event.getX();
                 touchY = (int) event.getY();
                 initAngle();

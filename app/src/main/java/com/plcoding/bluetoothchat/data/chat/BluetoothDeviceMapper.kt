@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothDevice
 import com.plcoding.bluetoothchat.domain.chat.BluetoothDeviceDomain
 
 /**
- * 映射类
+ * 蓝牙消息的映射类
  */
 @SuppressLint("MissingPermission")
 fun BluetoothDevice.toBluetoothDeviceDomain(): BluetoothDeviceDomain {

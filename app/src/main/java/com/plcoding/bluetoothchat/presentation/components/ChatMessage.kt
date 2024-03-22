@@ -59,7 +59,8 @@ fun ChatMessagePreview() {
             message = BluetoothMessage(
                 message = "Hello World!",
                 senderName = "Pixel 6",
-                isFromLocalUser = false
+                isFromLocalUser = false,
+                end="xxx"
             )
         )
     }

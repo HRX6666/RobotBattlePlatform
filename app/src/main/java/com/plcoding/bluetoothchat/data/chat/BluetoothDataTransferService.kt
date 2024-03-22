@@ -15,14 +15,23 @@ import java.io.IOException
  * 对于消息收发的函数功能
  */
 class BluetoothDataTransferService(
-    private val socket: BluetoothSocket
+    private val socket: BluetoothSocket//构建一个私人的蓝牙Socket
 ) {
+   /**
+    * 监听传入的消息
+    */
     fun listenForIncomingMessages(): Flow<BluetoothMessage> {
         return flow {
+            /**
+             * 先检查一下是否连接蓝牙
+             */
             if(!socket.isConnected) {
                 return@flow
             }
-            val buffer = ByteArray(1024)//字节缓冲区
+            val buffer = ByteArray(1024)//定义一个字节缓冲区，其实是字节数组
+            /**
+             * 读取传入的数据
+             */
             while(true) {
                 val byteCount = try {
                     socket.inputStream.read(buffer)//将字节读入数组
@@ -34,7 +43,7 @@ class BluetoothDataTransferService(
                  */
                 emit(//释放一些
                     buffer.decodeToString(
-                        endIndex = byteCount
+                        endIndex = byteCount//将字节解析为字符串
                     ).toBluetoothMessage(
                         isFromLocalUser = false
                     )
