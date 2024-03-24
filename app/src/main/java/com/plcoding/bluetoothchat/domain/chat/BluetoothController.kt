@@ -20,4 +20,5 @@ interface BluetoothController {
 
     fun closeConnection()//关闭连接
     fun release()//释放资源
+
 }

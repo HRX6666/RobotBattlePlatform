@@ -124,12 +124,15 @@ class AndroidBluetoothController(
             }
 
             /**
-             * 连接很重要的步骤
+             * 用于连接请求
              */
             currentServerSocket = bluetoothAdapter?.listenUsingRfcommWithServiceRecord(
                 "chat_service",
                 UUID.fromString(SERVICE_UUID)
             )
+            /**
+             * 用于监听其他设备的连接请求
+             */
 
             var shouldLoop = true
             while(shouldLoop) {
@@ -140,7 +143,7 @@ class AndroidBluetoothController(
                     shouldLoop = false
                     null
                 }
-                emit(ConnectionResult.ConnectionEstablished)
+                emit(ConnectionResult.ConnectionEstablished)//在一个循环中不断地尝试接收客户端的连接请求，并将连接的客户端赋值给currentClientSocket
                 currentClientSocket?.let {
                     currentServerSocket?.close()
                     val service = BluetoothDataTransferService(it)//设置一个发送数据男的服务
@@ -150,7 +153,7 @@ class AndroidBluetoothController(
                      */
                     emitAll(
                         service
-                            .listenForIncomingMessages()
+                            .listenForIncomingMessages()//读取传入的信息
                             .map {
                                 ConnectionResult.TransferSucceeded(it)//获得一个蓝牙消息
                             }

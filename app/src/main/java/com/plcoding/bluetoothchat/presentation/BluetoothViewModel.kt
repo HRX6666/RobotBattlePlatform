@@ -6,17 +6,24 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.plcoding.bluetoothchat.domain.chat.BluetoothController
 import com.plcoding.bluetoothchat.domain.chat.BluetoothDeviceDomain
+import com.plcoding.bluetoothchat.domain.chat.BluetoothMessage
 import com.plcoding.bluetoothchat.domain.chat.ConnectionResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class BluetoothViewModel @Inject constructor(
     private val bluetoothController: BluetoothController
 ): ViewModel() {
+    val messagesState = MutableStateFlow<List<BluetoothMessage>>(emptyList())
+
 
     private val _state = MutableStateFlow(BluetoothUiState())
     val state = combine(
@@ -27,7 +34,7 @@ class BluetoothViewModel @Inject constructor(
         state.copy(
             scannedDevices = scannedDevices,
             pairedDevices = pairedDevices,
-            messages = if(state.isConnected) state.messages else emptyList()
+            messages = if(state.isConnected) state.messages else emptyList()//如果连接则有消息，否则为空
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
@@ -43,6 +50,42 @@ class BluetoothViewModel @Inject constructor(
                 errorMessage = error
             ) }
         }.launchIn(viewModelScope)
+    }
+    fun Flow<ConnectionResult>.listen(): Job {
+        return onEach { result ->
+            when(result) {
+                ConnectionResult.ConnectionEstablished -> {
+                    _state.update { it.copy(
+                        isConnected = true,
+                        isConnecting = false,
+                        errorMessage = null
+                    ) }
+                }
+                is ConnectionResult.TransferSucceeded -> {
+                    _state.update { it.copy(
+                        //更新信息传递结果等等.....
+                        messages = it.messages + result.message
+
+                    ) }
+
+                }
+                is ConnectionResult.Error -> {
+                    _state.update { it.copy(
+                        isConnected = false,
+                        isConnecting = false,
+                        errorMessage = result.message
+                    ) }
+                }
+            }
+        }
+            .catch { throwable ->
+                bluetoothController.closeConnection()
+                _state.update { it.copy(
+                    isConnected = false,
+                    isConnecting = false,
+                ) }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun connectToDevice(device: BluetoothDeviceDomain) {
@@ -81,9 +124,7 @@ class BluetoothViewModel @Inject constructor(
             }
         }
     }
-    fun receiveMessage(remessage:String){
 
-    }
 
     fun startScan() {
         bluetoothController.startDiscovery()
@@ -92,42 +133,28 @@ class BluetoothViewModel @Inject constructor(
     fun stopScan() {
         bluetoothController.stopDiscovery()
     }
-
-
-    private fun Flow<ConnectionResult>.listen(): Job {
-        return onEach { result ->
-            when(result) {
-                ConnectionResult.ConnectionEstablished -> {
-                    _state.update { it.copy(
-                        isConnected = true,
-                        isConnecting = false,
-                        errorMessage = null
-                    ) }
-                }
-                is ConnectionResult.TransferSucceeded -> {
-                    _state.update { it.copy(
-                        messages = it.messages + result.message
-
-                    ) }
-                }
-                is ConnectionResult.Error -> {
-                    _state.update { it.copy(
-                        isConnected = false,
-                        isConnecting = false,
-                        errorMessage = result.message
-                    ) }
+    suspend fun fromMessage(): String = coroutineScope {
+        val messageChannel = produce<String> {
+            bluetoothController.startBluetoothServer().collect { result ->
+                when (result) {
+                    is ConnectionResult.TransferSucceeded -> {
+                        val bluetoothMessage = result.message
+                        send(bluetoothMessage.toString() + "xxxxx")
+                    }
+                    // 可以根据需要处理其他类型的 ConnectionResult
+                    else -> {
+                        // 其他类型的处理逻辑
+                    }
                 }
             }
         }
-            .catch { throwable ->
-                bluetoothController.closeConnection()
-                _state.update { it.copy(
-                    isConnected = false,
-                    isConnecting = false,
-                ) }
-            }
-            .launchIn(viewModelScope)
+
+        messageChannel.receive()
     }
+
+
+
+
 
     override fun onCleared() {
         super.onCleared()

@@ -2,40 +2,24 @@ package com.plcoding.bluetoothchat.presentation.components
 
 import android.content.res.Configuration
 import android.util.Log
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.layout.getDefaultLazyLayoutKey
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.contentColorFor
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,11 +28,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode.Companion.Color
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalOf
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,37 +37,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.plcoding.bluetoothchat.Joysticks.RockerView
-import com.plcoding.bluetoothchat.Joysticks.RockerView.OnRockerListener
 import com.plcoding.bluetoothchat.R
 import com.plcoding.bluetoothchat.presentation.BluetoothUiState
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.semantics.Role
 import com.plcoding.bluetoothchat.domain.chat.BluetoothMessage
 import java.time.Clock.offset
+import kotlin.reflect.KSuspendFunction0
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun  Playgame (state: BluetoothUiState,
-               onDisconnect: () -> Unit,
-               onSendMessage: (String,String) -> Unit,
+fun  Playgame (
+    state: BluetoothUiState,
+    onDisconnect: () -> Unit,
+    onSendMessage: (String, String) -> Unit,
+
 ) {
+    //摇杆的x、y轴的位置
     var x:String=""
     var y:String=""
-    /**
-     * 对小车接收数据
-     * 防御模块血量，攻击模块血量，行走模块血量，核心模块是否被摧毁，防御模块装甲值，武器模块伤害，射速，行走模块速度
-     */
-    val STA:String="STA"
-    var prevent_blood :String=""//防御模块血量
-    var arms_blood:String=""//武器模块血量
-    var walk_blood:String=""//行走模块血量
-    var isDie :String=""//核心模块是否被摧毁
-    var meHurt:String=""//我方武器模块伤害
-    var firingRate:String=""//射速
-    val workRate:String=""//行走模块速度
-    val inputString = "1234567"
-    val byteArray = inputString.toByteArray()
+    val message = rememberSaveable {
+        mutableStateOf("")
+    }
     /**
      * 向小车发送数据
      * 开火，发动技能，向前，向后，左转，右转，比赛开始，比赛结束
@@ -97,8 +68,53 @@ fun  Playgame (state: BluetoothUiState,
     var who:String="0"//哪方发动技能
     var skill:String="0"//发动技能
     var direction:String="0"//方向
-    var isgame:String="1"//比赛进程
-    var you_hurt:String="1"//敌方武器模块伤害
+    var isgame:String="0"//比赛进程
+    val item:Int=state.messages.size
+    var message1: String = state.messages.lastOrNull()?.message ?: ""
+    var message2:List<Int>?=null
+    if (message1.isNotEmpty()) {
+        Log.e("meassage1",message1)
+        message2 = parseAsciiString(message1)
+        Log.d("hex", message2.toString())
+        // 继续处理 message2
+    } else {
+        // 处理空字符串的情况
+    }
+
+
+
+
+
+
+    /**
+     * 对小车接收数据
+     * 防御模块血量，攻击模块血量，行走模块血量，核心模块是否被摧毁，防御模块装甲值，武器模块伤害，射速，行走模块速度
+     */
+    var prevent_blood :Float= 100.0F
+    var arms_blood:String="100%"
+    var walk_blood:String="100%"
+    var isDie :String="0"
+    var meHurt:String="0"
+    var firingRate:String="0"
+    var workRate1:String="0"
+    var workRate2:String="0"
+    if (message2!=null&& message2.size>=12) {
+        prevent_blood = message2[3].toFloat()//防御模块血量
+        arms_blood=message2[4].toString()//武器模块血量
+        walk_blood=message2[5].toString()//行走模块血量
+        isDie =message2[6].toFloat().toString()//核心模块是否被摧毁
+        meHurt=message2[7].toFloat().toString()//我方武器模块伤害
+        firingRate=message2[8].toFloat().toString()//射速
+        workRate1=message2[9].toFloat().toString()//行走模块速度
+        workRate2=message2[10].toFloat().toString()//行走模块速度
+    } else {
+        // 处理长度不足的情况
+    }
+    var you_hurt:String=meHurt//敌方武器模块伤害
+
+    val inputString = "1234567"
+    val byteArray = inputString.toByteArray()
+
 
     Image(
         painter = painterResource(id = R.drawable.bg1),
@@ -170,7 +186,7 @@ fun  Playgame (state: BluetoothUiState,
                         }
                     },
                     modifier = Modifier
-                        .offset(y = 135.dp),
+                        .offset(y = 75.dp),
                 )
 
             }
@@ -183,21 +199,21 @@ fun  Playgame (state: BluetoothUiState,
                     modifier = Modifier.padding(start = 320.dp)
                 ) {
 
-                    Text(text = "血量"+Character.getNumericValue(byteArray[1].toInt()),
+                    Text(text = "血量"+prevent_blood+"%",
                         style = TextStyle(fontSize =12.sp ),
                         color= Color(0x6AEDEDED),
                         modifier = Modifier
                             .offset(y=20.dp,x=50.dp)
                     )
                     LinearProgressIndicator(
-                        progress = 0.6.toFloat(),
+                        progress = prevent_blood/100,
                         color= Color(0xCDB10000),// 进度值，范围为0.0到1.0
                         modifier = Modifier
                             .size(100.dp, 12.dp)
                             .offset(y = 20.dp, x = 50.dp) // 填充父布局的宽度
                     )
-                    Text(text = "技能"+state.messages,
-                        style = TextStyle(fontSize =12.sp ),
+                    Text(text = "技能"+message2,
+                        style = TextStyle(fontSize =5.sp ),
                         color= Color(0x6AEDEDED),
                         modifier = Modifier
                             .offset(y=44.dp,x=70.dp)
@@ -234,11 +250,6 @@ fun  Playgame (state: BluetoothUiState,
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             )
-
-
-
-
-
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -260,7 +271,11 @@ fun  Playgame (state: BluetoothUiState,
     }
 @Composable
 fun MyComposeLayout() {
+
 }
+/**
+ * 任意毫秒延时函数
+ */
 fun delayMilliseconds(milliseconds: Long) {
     val start = System.currentTimeMillis()
     var elapsed: Long
@@ -268,6 +283,35 @@ fun delayMilliseconds(milliseconds: Long) {
         elapsed = System.currentTimeMillis() - start
     } while (elapsed < milliseconds)
 }
+
+fun parseAsciiString(ascii: String): List<Int> {
+
+    return try {
+      // ascii.split(" ").map { it.toInt() }
+        val asciiValues = ascii.split(" ").map { if (it.length == 2 && it.all { c -> c in '0'..'9' || c in 'A'..'F' || c in 'a'..'f' }) Integer.parseInt(it, 16) else throw NumberFormatException() }
+        val asciiChars = asciiValues.map { it.toChar().toInt() }
+        asciiChars
+        } catch (e: NumberFormatException) {
+        emptyList()
+
+        }
+
+}
+fun hexToDecimal(hex: String): Int {
+    return try {
+        hex.toInt(16)
+    }catch (e:NumberFormatException){
+        0
+    }
+}
+
+fun extractValueAtIndex(values: List<Int>, index: Int): Int? {
+    if (index < 0 || index >= values.size) {
+        return null
+    }
+    return values[index]
+}
+
 
 @Preview(name = "Landscape Preview", showBackground = true, uiMode = Configuration.UI_MODE_TYPE_NORMAL or Configuration.UI_MODE_NIGHT_NO, widthDp = 1000, heightDp = 600)
 @Composable

@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.plcoding.bluetoothchat.presentation.BluetoothUiState
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen(
     state: BluetoothUiState,
